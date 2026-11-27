@@ -233,18 +233,86 @@
           </div>
         </article>
       </div>
+
+      <!-- Base de datos de personas registradas -->
+      <section class="table-card" aria-label="Base de datos de personas registradas">
+        <div class="table-toolbar">
+          <div>
+            <h2>Base de datos de personas registradas</h2>
+            <p>Consulta en línea de los asistentes inscritos (sincronizada con los filtros superiores).</p>
+          </div>
+
+          <div class="table-search-wrap">
+            <input
+              type="search"
+              id="tableSearchInput"
+              class="form-control table-search-input"
+              placeholder="Buscar por nombre, documento, correo o programa..."
+              aria-label="Buscar persona registrada"
+            />
+            <span class="table-count-badge" id="tableCountBadge">0 registros</span>
+
+            <div class="export-dropdown" id="exportDropdown">
+              <button
+                type="button"
+                id="exportDropdownBtn"
+                class="btn btn-green btn-sm"
+                aria-expanded="false"
+                aria-haspopup="true"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Exportar
+              </button>
+              <div class="export-menu is-hidden" id="exportMenu" role="menu">
+                <button type="button" class="export-menu-item" id="exportExcelBtn" role="menuitem">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13l4 4"/><path d="M12 13l-4 4"/></svg>
+                  Descargar Excel (.xlsx)
+                </button>
+                <button type="button" class="export-menu-item" id="exportCsvBtn" role="menuitem">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                  Descargar CSV (.csv)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre completo</th>
+                <th>Documento</th>
+                <th>Correo electrónico</th>
+                <th>Celular</th>
+                <th>Ciudad</th>
+                <th>Situación actual</th>
+                <th>Programa o institución</th>
+                <th>¿Cómo se enteró?</th>
+                <th>Fecha de registro</th>
+              </tr>
+            </thead>
+            <tbody id="registrantsTableBody"></tbody>
+          </table>
+          <div id="tableEmptyState" class="table-empty-state is-hidden">
+            No se encontraron personas registradas con los filtros o búsqueda actuales.
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 
   <footer class="footer" style="padding: 24px 0;">
     <div class="container footer-bottom" style="padding-top: 0;">
-      <span>© 2026 Uparsistem · Panel estadístico privado (solo cifras agregadas)</span>
+      <span>© 2026 Uparsistem · Panel privado de gestión e indicadores</span>
       <span>Seminario "Tu imagen, tu oportunidad"</span>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="config.js"></script>
   <script src="dashboard.js"></script>
 </body>

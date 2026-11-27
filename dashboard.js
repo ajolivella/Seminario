@@ -55,6 +55,9 @@ function showLoginScreen() {
   allRecords = [];
   destroyAllCharts();
 
+  const tbody = document.getElementById('registrantsTableBody');
+  if (tbody) tbody.innerHTML = '';
+
   document.getElementById('loginSection').classList.remove('is-hidden');
   document.getElementById('dashboardSection').classList.add('is-hidden');
   document.getElementById('logoutBtnTop').classList.add('is-hidden');
@@ -168,12 +171,22 @@ function bindDashboardEvents() {
     }
   });
 
+  const searchInput = document.getElementById('tableSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      renderRegistrantsTable(getFilteredByTopControls());
+    });
+  }
+
+  bindExportEvents();
+
   if (clearFiltersBtn) {
     clearFiltersBtn.addEventListener('click', () => {
       filterControls.forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      if (searchInput) searchInput.value = '';
       applyFiltersAndRender();
     });
   }
@@ -215,8 +228,10 @@ async function loadAndRenderStatistics() {
 
   const { data, error } = await supabaseClient
     .from('inscripciones')
-    .select('situacion_actual, ciudad, como_se_entero, programa_institucion, fecha_registro')
-    .order('fecha_registro', { ascending: true });
+    .select(
+      'nombres, apellidos, tipo_documento, numero_documento, correo, celular, ciudad, situacion_actual, programa_institucion, como_se_entero, fecha_registro'
+    )
+    .order('fecha_registro', { ascending: false });
 
   if (error) {
     console.error('Error al consultar estadísticas:', error);
@@ -225,10 +240,17 @@ async function loadAndRenderStatistics() {
   }
 
   allRecords = (data || []).map((row) => ({
+    nombres: (row.nombres || '').trim(),
+    apellidos: (row.apellidos || '').trim(),
+    tipo_documento: row.tipo_documento || '',
+    numero_documento: row.numero_documento || '',
+    correo: (row.correo || '').trim(),
+    celular: (row.celular || '').trim(),
     situacion_actual: row.situacion_actual || 'No especificado',
     ciudad: normalizeLabel(row.ciudad) || 'No especificada',
     como_se_entero: row.como_se_entero || 'No especificado',
     programa_institucion: normalizeLabel(row.programa_institucion) || 'No especificado',
+    fecha_registro: row.fecha_registro || '',
     fecha_local: toLocalDateString(row.fecha_registro)
   }));
 
@@ -293,14 +315,14 @@ function populateCityFilter(records) {
 /* ==========================================================================
    Filtrado y recálculo de KPIs y Gráficos
    ========================================================================== */
-function applyFiltersAndRender() {
+function getFilteredByTopControls() {
   const situacion = document.getElementById('filterSituacion').value;
   const ciudad = document.getElementById('filterCiudad').value;
   const canal = document.getElementById('filterCanal').value;
   const desde = document.getElementById('filterFechaDesde').value;
   const hasta = document.getElementById('filterFechaHasta').value;
 
-  const filtered = allRecords.filter((item) => {
+  return allRecords.filter((item) => {
     if (situacion && item.situacion_actual !== situacion) return false;
     if (ciudad && item.ciudad !== ciudad) return false;
     if (canal && item.como_se_entero !== canal) return false;
@@ -308,6 +330,16 @@ function applyFiltersAndRender() {
     if (hasta && (!item.fecha_local || item.fecha_local > hasta)) return false;
     return true;
   });
+}
+
+function applyFiltersAndRender() {
+  const situacion = document.getElementById('filterSituacion').value;
+  const ciudad = document.getElementById('filterCiudad').value;
+  const canal = document.getElementById('filterCanal').value;
+  const desde = document.getElementById('filterFechaDesde').value;
+  const hasta = document.getElementById('filterFechaHasta').value;
+
+  const filtered = getFilteredByTopControls();
 
   const hasActiveFilter = Boolean(situacion || ciudad || canal || desde || hasta);
   const statusEl = document.getElementById('filtersStatus');
@@ -319,6 +351,269 @@ function applyFiltersAndRender() {
 
   renderKpis(filtered.length);
   renderAllCharts(filtered);
+  renderRegistrantsTable(filtered);
+}
+
+function formatTimestampDisplay(isoTimestamp) {
+  if (!isoTimestamp) return '-';
+  const date = new Date(isoTimestamp);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleString('es-CO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function getTableMatchingRecords(records) {
+  const searchInput = document.getElementById('tableSearchInput');
+  const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+  if (!query) return records;
+
+  return records.filter((item) => {
+    const fullText = [
+      item.nombres,
+      item.apellidos,
+      item.tipo_documento,
+      item.numero_documento,
+      item.correo,
+      item.celular,
+      item.ciudad,
+      item.situacion_actual,
+      item.programa_institucion,
+      item.como_se_entero
+    ]
+      .join(' ')
+      .toLowerCase();
+    return fullText.includes(query);
+  });
+}
+
+function renderRegistrantsTable(records) {
+  const tbody = document.getElementById('registrantsTableBody');
+  const emptyState = document.getElementById('tableEmptyState');
+  const countBadge = document.getElementById('tableCountBadge');
+  if (!tbody || !emptyState || !countBadge) return;
+
+  const matching = getTableMatchingRecords(records);
+
+  countBadge.textContent =
+    matching.length === 1 ? '1 registro' : `${matching.length} registros`;
+
+  tbody.innerHTML = '';
+
+  if (matching.length === 0) {
+    emptyState.classList.remove('is-hidden');
+    return;
+  }
+
+  emptyState.classList.add('is-hidden');
+
+  matching.forEach((item, index) => {
+    const tr = document.createElement('tr');
+
+    const cells = [
+      String(index + 1),
+      `${item.nombres} ${item.apellidos}`.trim() || '-',
+      `${item.tipo_documento} ${item.numero_documento}`.trim() || '-',
+      item.correo || '-',
+      item.celular || '-',
+      item.ciudad || '-',
+      null,
+      item.programa_institucion || 'No especificado',
+      item.como_se_entero || 'No especificado',
+      formatTimestampDisplay(item.fecha_registro)
+    ];
+
+    cells.forEach((value, cellIndex) => {
+      const td = document.createElement('td');
+      if (cellIndex === 6) {
+        const badge = document.createElement('span');
+        badge.className =
+          item.situacion_actual === 'Buscando empleo'
+            ? 'table-badge table-badge--orange'
+            : 'table-badge';
+        badge.textContent = item.situacion_actual;
+        td.appendChild(badge);
+      } else {
+        td.textContent = value;
+      }
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+/* ==========================================================================
+   Exportación a Excel (.xlsx) y CSV (.csv)
+   ========================================================================== */
+function bindExportEvents() {
+  const dropdown = document.getElementById('exportDropdown');
+  const toggleBtn = document.getElementById('exportDropdownBtn');
+  const menu = document.getElementById('exportMenu');
+  const excelBtn = document.getElementById('exportExcelBtn');
+  const csvBtn = document.getElementById('exportCsvBtn');
+
+  if (!dropdown || !toggleBtn || !menu) return;
+
+  const closeMenu = () => {
+    menu.classList.add('is-hidden');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+  };
+
+  toggleBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isHidden = menu.classList.toggle('is-hidden');
+    toggleBtn.setAttribute('aria-expanded', String(!isHidden));
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!dropdown.contains(event.target)) {
+      closeMenu();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeMenu();
+  });
+
+  if (excelBtn) {
+    excelBtn.addEventListener('click', () => {
+      closeMenu();
+      exportRecords('xlsx');
+    });
+  }
+
+  if (csvBtn) {
+    csvBtn.addEventListener('click', () => {
+      closeMenu();
+      exportRecords('csv');
+    });
+  }
+}
+
+function buildExportRows(records) {
+  return records.map((item, idx) => ({
+    '#': idx + 1,
+    Nombres: item.nombres || '',
+    Apellidos: item.apellidos || '',
+    'Tipo de documento': item.tipo_documento || '',
+    'Número de documento': String(item.numero_documento || ''),
+    'Correo electrónico': item.correo || '',
+    Celular: String(item.celular || ''),
+    Ciudad: item.ciudad || '',
+    'Situación actual': item.situacion_actual || '',
+    'Programa o institución': item.programa_institucion || 'No especificado',
+    '¿Cómo te enteraste?': item.como_se_entero || 'No especificado',
+    'Fecha de registro': formatTimestampDisplay(item.fecha_registro)
+  }));
+}
+
+function getExportFileBaseName() {
+  const today = toLocalDateString(new Date().toISOString()) || 'export';
+  return `inscritos_seminario_2026_${today}`;
+}
+
+function exportRecords(format) {
+  showDashboardAlert(null, '');
+  const records = getTableMatchingRecords(getFilteredByTopControls());
+
+  if (records.length === 0) {
+    showDashboardAlert('info', 'No hay registros visibles para exportar con los filtros actuales.');
+    return;
+  }
+
+  const rows = buildExportRows(records);
+  const fileBase = getExportFileBaseName();
+
+  if (format === 'csv') {
+    downloadCsvFile(rows, `${fileBase}.csv`);
+    return;
+  }
+
+  if (window.XLSX) {
+    const worksheet = window.XLSX.utils.json_to_sheet(rows);
+    worksheet['!cols'] = [
+      { wch: 5 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 28 },
+      { wch: 14 },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 20 }
+    ];
+    const workbook = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(workbook, worksheet, 'Inscritos');
+    window.XLSX.writeFile(workbook, `${fileBase}.xlsx`);
+  } else {
+    downloadExcelFallback(rows, `${fileBase}.xls`);
+  }
+}
+
+function triggerBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function downloadCsvFile(rows, filename) {
+  const headers = Object.keys(rows[0]);
+  const escapeCsv = (val) => {
+    const str = String(val ?? '');
+    if (/[",\n\r;]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const lines = [
+    headers.map(escapeCsv).join(','),
+    ...rows.map((row) => headers.map((h) => escapeCsv(row[h])).join(','))
+  ];
+
+  // BOM UTF-8 para que Excel muestre correctamente tildes y eñes
+  const csvContent = '\uFEFF' + lines.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  triggerBlobDownload(blob, filename);
+}
+
+function escapeHtml(text) {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function downloadExcelFallback(rows, filename) {
+  const headers = Object.keys(rows[0]);
+  const headerHtml = headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('');
+  const bodyHtml = rows
+    .map(
+      (row) =>
+        `<tr>${headers.map((h) => `<td>${escapeHtml(row[h])}</td>`).join('')}</tr>`
+    )
+    .join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><table border="1"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></body></html>`;
+  const blob = new Blob(['\uFEFF' + html], {
+    type: 'application/vnd.ms-excel;charset=utf-8;'
+  });
+  triggerBlobDownload(blob, filename);
 }
 
 function renderKpis(count) {
