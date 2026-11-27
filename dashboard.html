@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard de Estadísticas · Seminario Uparsistem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dashboard-body">
+
+  <!-- Barra superior -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand" aria-label="Volver a la página del seminario">
+        <img src="Logo upar.jpeg" alt="Logo de Uparsistem" class="brand-logo" />
+        <div class="brand-text">
+          <span class="brand-name">Uparsistem</span>
+          <span class="brand-sub">Dashboard · Seminario 2026</span>
+        </div>
+      </a>
+
+      <div class="nav-actions">
+        <a href="index.html" class="btn btn-outline btn-sm">Volver a la página</a>
+        <button type="button" id="logoutBtnTop" class="btn btn-primary btn-sm is-hidden">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+    <!-- Pantalla de inicio de sesión (visible por defecto; sin sesión no muestra ningún dato) -->
+    <section id="loginSection" class="login-section" aria-label="Inicio de sesión">
+      <div class="login-card">
+        <div class="login-header">
+          <img src="Logo upar.jpeg" alt="Logo de Uparsistem" class="login-logo" />
+          <h1>Acceso al Dashboard</h1>
+          <p>Inicia sesión con tu cuenta autorizada de Uparsistem para consultar las estadísticas de inscritos.</p>
+        </div>
+
+        <form id="loginForm" class="login-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">Correo electrónico</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="docente@uparsistem.edu.co" autocomplete="email" required />
+            <span class="field-error" id="error-loginEmail"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Contraseña</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="Ingresa tu contraseña" autocomplete="current-password" required />
+            <span class="field-error" id="error-loginPassword"></span>
+          </div>
+
+          <button type="submit" id="loginBtn" class="btn btn-primary" style="width: 100%;">
+            Iniciar sesión
+          </button>
+
+          <div id="loginFeedback" class="form-feedback" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Panel de estadísticas (oculto hasta verificar sesión activa) -->
+    <section id="dashboardSection" class="container is-hidden" aria-label="Estadísticas del seminario">
+      <div class="dash-toolbar">
+        <div class="dash-title-group">
+          <h1>Estadísticas de Inscripciones</h1>
+          <p class="dash-subtitle" id="lastUpdatedText">
+            Seminario "Tu imagen, tu oportunidad" · Auditorio 1 (30 de noviembre de 2026)
+          </p>
+        </div>
+
+        <div class="dash-toolbar-actions">
+          <button type="button" id="refreshBtn" class="btn btn-green btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Actualizar
+          </button>
+          <button type="button" id="logoutBtn" class="btn btn-outline btn-sm">
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+
+      <div id="dashboardAlert" class="form-feedback" role="status" aria-live="polite" style="margin-bottom: 20px;"></div>
+
+      <!-- Tarjetas KPI -->
+      <div class="kpi-grid">
+        <article class="kpi-card kpi-card--green">
+          <div class="kpi-top">
+            <span class="kpi-label">Total de inscritos</span>
+            <div class="kpi-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiTotal">0</div>
+          <span class="kpi-note" id="kpiTotalNote">De 100 cupos habilitados</span>
+        </article>
+
+        <article class="kpi-card kpi-card--orange">
+          <div class="kpi-top">
+            <span class="kpi-label">Cupos disponibles</span>
+            <div class="kpi-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiAvailable">100</div>
+          <span class="kpi-note">Capacidad máxima del Auditorio 1: 100</span>
+        </article>
+
+        <article class="kpi-card kpi-card--lime">
+          <div class="kpi-top">
+            <span class="kpi-label">Ocupación</span>
+            <div class="kpi-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiOccupancy">0%</div>
+          <div class="progress-track" aria-label="Barra de progreso de ocupación">
+            <div class="progress-fill" id="occupancyBar"></div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Filtros -->
+      <section class="filters-card" aria-label="Filtros de estadísticas">
+        <div class="filters-header">
+          <h2>Filtrar estadísticas</h2>
+          <span class="filters-status" id="filtersStatus">Mostrando todos los registros</span>
+        </div>
+
+        <div class="filters-grid">
+          <div class="filter-field">
+            <label for="filterSituacion">Situación actual</label>
+            <select id="filterSituacion" class="form-control">
+              <option value="">Todas</option>
+              <option value="Estudiante">Estudiante</option>
+              <option value="Egresado">Egresado</option>
+              <option value="Empleado">Empleado</option>
+              <option value="Buscando empleo">Buscando empleo</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="filterCiudad">Ciudad</label>
+            <select id="filterCiudad" class="form-control">
+              <option value="">Todas las ciudades</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="filterCanal">¿Cómo se enteró?</label>
+            <select id="filterCanal" class="form-control">
+              <option value="">Todos los canales</option>
+              <option value="Redes sociales">Redes sociales</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Correo">Correo</option>
+              <option value="Un amigo">Un amigo</option>
+              <option value="Otro">Otro</option>
+              <option value="No especificado">No especificado</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="filterFechaDesde">Desde</label>
+            <input type="date" id="filterFechaDesde" class="form-control" />
+          </div>
+
+          <div class="filter-field">
+            <label for="filterFechaHasta">Hasta</label>
+            <div class="filter-actions">
+              <input type="date" id="filterFechaHasta" class="form-control" />
+              <button type="button" id="clearFiltersBtn" class="btn btn-outline btn-sm" title="Limpiar filtros">Limpiar</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gráficos -->
+      <div class="charts-grid">
+        <article class="chart-card">
+          <div class="chart-card-header">
+            <h3>Inscritos por situación actual</h3>
+            <p>Distribución según perfil laboral o académico</p>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chartSituacion"></canvas>
+            <div class="chart-empty is-hidden" id="empty-chartSituacion">No hay datos para los filtros seleccionados.</div>
+          </div>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-card-header">
+            <h3>Canal de difusión ("¿Cómo te enteraste?")</h3>
+            <p>Efectividad de cada medio de comunicación</p>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chartCanal"></canvas>
+            <div class="chart-empty is-hidden" id="empty-chartCanal">No hay datos para los filtros seleccionados.</div>
+          </div>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-card-header">
+            <h3>Inscritos por ciudad</h3>
+            <p>Ordenado de mayor a menor participación</p>
+          </div>
+          <div class="chart-canvas-wrap chart-canvas-wrap--tall">
+            <canvas id="chartCiudad"></canvas>
+            <div class="chart-empty is-hidden" id="empty-chartCiudad">No hay datos para los filtros seleccionados.</div>
+          </div>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-card-header">
+            <h3>Top 10: Programa o institución</h3>
+            <p>Las 10 instituciones o programas más frecuentes</p>
+          </div>
+          <div class="chart-canvas-wrap chart-canvas-wrap--tall">
+            <canvas id="chartPrograma"></canvas>
+            <div class="chart-empty is-hidden" id="empty-chartPrograma">No hay datos para los filtros seleccionados.</div>
+          </div>
+        </article>
+
+        <article class="chart-card chart-card--wide">
+          <div class="chart-card-header">
+            <h3>Inscripciones por día</h3>
+            <p>Evolución diaria de registros acumulados en cada fecha</p>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chartTiempo"></canvas>
+            <div class="chart-empty is-hidden" id="empty-chartTiempo">No hay datos para los filtros seleccionados.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" style="padding: 24px 0;">
+    <div class="container footer-bottom" style="padding-top: 0;">
+      <span>© 2026 Uparsistem · Panel estadístico privado (solo cifras agregadas)</span>
+      <span>Seminario "Tu imagen, tu oportunidad"</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
